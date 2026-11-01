@@ -18,7 +18,7 @@ import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 /// relying on maintained, null-safe packages underneath.
 class BlueThermalPrinter {
   BlueThermalPrinter._internal() {
-    _startStateMonitor();
+    //_startStateMonitor();
   }
 
   static final BlueThermalPrinter instance = BlueThermalPrinter._internal();
@@ -397,6 +397,54 @@ class BlueThermalPrinter {
     // 5. Reset alignment to left for subsequent text.
     await _send(generator.setStyles(const PosStyles(align: PosAlign.left)));
   }
+
+
+
+
+  Future<void> printImageBlanco(String path) async {
+    final file = File(path);
+    if (!await file.exists()) return;
+
+    final data = await file.readAsBytes();
+    final decoded = img.decodeImage(data);
+    if (decoded == null) return;
+
+    // Fondo blanco + grayscale
+    var canvas = img.Image(width: decoded.width, height: decoded.height);
+    img.fill(canvas, color: img.ColorRgb8(255, 255, 255));
+    img.compositeImage(canvas, decoded);
+    canvas = img.grayscale(canvas);
+
+    // Threshold suave
+    for (var y = 0; y < canvas.height; y++) {
+      for (var x = 0; x < canvas.width; x++) {
+        final p = canvas.getPixel(x, y);
+        if (p.r < 140) {
+          canvas.setPixel(x, y, img.ColorRgb8(0, 0, 0));
+        } else {
+          canvas.setPixel(x, y, img.ColorRgb8(255, 255, 255));
+        }
+      }
+    }
+
+    // 🔥 ESCALADO CORRECTO
+    final int targetWidth = _paperSize.width; // ej 576
+    final int targetHeight =
+        (canvas.height * targetWidth / canvas.width).round();
+
+    final resized = img.copyResize(
+      canvas,
+      width: targetWidth,
+      height: targetHeight,
+      interpolation: img.Interpolation.average,
+    );
+
+    final generator = await _getGenerator();
+
+    await _send(generator.imageRaster(resized, align: PosAlign.center));
+    await _send(generator.setStyles(const PosStyles(align: PosAlign.left)));
+  }
+
 
 
 
@@ -826,7 +874,10 @@ class BlueThermalPrinter {
     for (int i = 1; i <= effectiveMaxIndex; i++) {
       final double delta =
           (normalized - _approximatePixelHeights[i]).abs();
-      if (delta < closestDelta) {
+      if (delta < closestDelta ||
+          (delta == closestDelta &&
+              _approximatePixelHeights[i] >
+                  _approximatePixelHeights[closestIndex])) {
         closestDelta = delta;
         closestIndex = i;
       }

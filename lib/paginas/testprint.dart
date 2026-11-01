@@ -8,6 +8,11 @@ import 'package:intl/intl.dart';
 class TestPrint {
   final BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
   final NumberFormat formato = NumberFormat('#,###');
+  // ESC/POS: GS ! 0x10 => ancho x2, alto x1 (aumento intermedio sin negrita).
+  static const String _escBig = '\x1D!\x10';
+  static const String _escNormal = '\x1D!\x00';
+
+  String _big(String text) => '$_escBig$text$_escNormal';
 
   Future<void> sample2(String pathImage, String direccion, String elId) async {
     final res = await http.get(
@@ -21,24 +26,34 @@ class TestPrint {
     if (isConnected == true) {
       try {
         await bluetooth.printImage(pathImage);
-        await bluetooth.printCustom('Fecha: ${body['created_at']}\n'
-        'Punto: $direccion\n'
-        'No:  $elId', 12, 0, charset: 'iso-8859-1',);
+        await bluetooth.printCustom(
+          'Fecha: ${body['created_at']}\n'
+          'Punto: $direccion\n'
+          "${_big('No:  00000$elId')}",
+          12,
+          0,
+          charset: 'iso-8859-1',
+        );
 
         final valor = int.tryParse(body['valor']?.toString() ?? '0') ?? 0;
         final currency = body['currency']?.toString() ?? 'COP';
         final valorLetras = body['valor_letras']?.toString() ?? '';
 
         await bluetooth.printCustom(
-          body['name'].toString()+'\n'
-          'Valor:  \$ ${formato.format(valor).replaceAll(',', '.')}\n'
-          '($valorLetras $currency)', 14, 1, charset: 'iso-8859-1',);
+          '${_big(body['name'].toString())}\n'
+          '${_big('Valor:  \$ ${formato.format(valor).replaceAll(',', '.')}')}\n'
+          '($valorLetras $currency)',
+          12,
+          1,
+          charset: 'iso-8859-1',
+        );
 
         await bluetooth.printCustom(
           'PRIMEROS 3 CARACTERES DE LA WALLET Y ULTIMOS 3 CARACTERES DE LA WALLET\n'
-          '(${body['wallet_inicio']}) (${body['wallet_fin']})',
+          '${_big('(${body['wallet_inicio']}) (${body['wallet_fin']})')}',
           12,
           1,
+          charset: 'iso-8859-1',
         );
 
         await bluetooth.printCustom(
@@ -60,7 +75,11 @@ class TestPrint {
           12,
           0,
         );
-        await bluetooth.printCustom('>>>      Gracias      <<<', 14, 1);
+        await bluetooth.printCustom(
+          _big('>>>     Gracias     <<<'),
+          12,
+          1,
+        );
         await bluetooth.paperCut();
       } catch (error, stackTrace) {
         debugPrint('Error al imprimir factura: $error');
@@ -79,33 +98,41 @@ class TestPrint {
       try {
         await bluetooth.printImage(pathImage);
         await bluetooth.printCustom('', 0, 0); // reset
-        await bluetooth.printCustom('Fecha: $timestamp', 12, 0, charset: 'iso-8859-1',);
-        await bluetooth.printCustom('Punto: $direccion', 12, 0, charset: 'iso-8859-1',);
-        await bluetooth.printCustom('No: 45345345', 12, 1, charset: 'iso-8859-1',);
-
         await bluetooth.printCustom(
-          'Marcos Pinto nuevo 4',
-          14,
-          1,
+          'Fecha: $timestamp',
+          12,
+          0,
           charset: 'iso-8859-1',
         );
         await bluetooth.printCustom(
-          'Valor:  \$ 2.800.000',
-          14,
-          1,
+          'Punto: $direccion',
+          12,
+          0,
+          charset: 'iso-8859-1',
         );
         await bluetooth.printCustom(
-          "(dos millones ocho cientos mil)",
+          "No: ${_big('45345345')}",
           12,
           1,
+          charset: 'iso-8859-1',
         );
 
         await bluetooth.printCustom(
-          'PRIMEROS 3 CARACTERES DE LA WALLET Y ULTIMOS 3 CARACTERES DE LA WALLET',
+          "${_big('Marcos Pinto nuevo 4')}\n"
+          "${_big('Valor:  \$ 2.800.000')}\n"
+          "(dos millones ocho cientos mil)",
           12,
           1,
+          charset: 'iso-8859-1',
         );
-        await bluetooth.printCustom('(3ze) (254)', 14, 1);
+
+        await bluetooth.printCustom(
+          "PRIMEROS 3 CARACTERES DE LA WALLET Y ULTIMOS 3 CARACTERES DE LA WALLET\n"
+          "${_big('(3ze) (254)')}",
+          12,
+          1,
+          charset: 'iso-8859-1',
+        );
 
         await bluetooth.printCustom(
           'Confirmo que los digitos o caracteres mencionados dentro de los parentesis '
@@ -126,7 +153,11 @@ class TestPrint {
           12,
           0,
         );
-        await bluetooth.printCustom('>>>      Gracias      <<<', 14, 1);
+        await bluetooth.printCustom(
+          _big('>>>     Gracias     <<<'),
+          12,
+          1,
+        );
         await bluetooth.paperCut();
       } catch (error, stackTrace) {
         debugPrint('Error al imprimir prueba: $error');
@@ -147,18 +178,27 @@ class TestPrint {
     if (isConnected == true) {
       try {
         await bluetooth.printImage(pathImage);
-        await bluetooth.printCustom('Fecha: ${body['created_at']}\n'
-        'Punto: $direccion\n'
-        'No:  $elId', 12, 0, charset: 'iso-8859-1',);
+        await bluetooth.printCustom(
+          'Fecha: ${body['created_at']}\n'
+          'Punto: $direccion\n'
+          "${_big('No:  00000$elId')}",
+          12,
+          0,
+          charset: 'iso-8859-1',
+        );
 
         final valor = int.tryParse(body['valor']?.toString() ?? '0') ?? 0;
         final currency = body['currency']?.toString() ?? 'COP';
         final valorLetras = body['valor_letras']?.toString() ?? '';
 
         await bluetooth.printCustom(
-          body['name'].toString()+'\n'
-          'Valor:  \$ ${formato.format(valor).replaceAll(',', '.')}\n'
-          '($valorLetras $currency)', 14, 1, charset: 'iso-8859-1',);
+          '${_big(body['name'].toString())}\n'
+          '${_big('Valor:  \$ ${formato.format(valor).replaceAll(',', '.')}')}\n'
+          '($valorLetras $currency)',
+          12,
+          1,
+          charset: 'iso-8859-1',
+        );
 
         await bluetooth.printCustom(
           body['descripcion'].toString(),
@@ -176,7 +216,11 @@ class TestPrint {
           12,
           0,
         );
-        await bluetooth.printCustom('>>>      Gracias      <<<', 14, 1);
+        await bluetooth.printCustom(
+          _big('>>>     Gracias     <<<'),
+          12,
+          1,
+        );
         await bluetooth.paperCut();
       } catch (error, stackTrace) {
         debugPrint('Error al imprimir factura: $error');

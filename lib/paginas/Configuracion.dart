@@ -72,55 +72,75 @@ class _ConfiguracionState extends State<ConfiguracionPage> {
           ],
         ),
       ),
-      body: SingleChildScrollView(
+      body: SafeArea(
         child: Column(
-          children: <Widget>[
-            ListTile(
-              title: const Text(
-                'Impresora Seleccionada',
-                style: whiteBoldText,
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    ListTile(
+                      title: const Text(
+                        'Impresora Seleccionada',
+                        style: whiteBoldText,
+                      ),
+                      subtitle: Text(
+                        elDispositivo ?? 'Ninguna',
+                        style: greyText,
+                      ),
+                      trailing: Icon(
+                        Icons.keyboard_arrow_right,
+                        color: Colors.grey.shade400,
+                      ),
+                      onTap: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const SeleccionPage2(),
+                          ),
+                        );
+                        _getUserInfo();
+                      },
+                    ),
+                    const Divider(
+                      color: Colors.black,
+                      height: 5,
+                    ),
+                    ListTile(
+                      title: const Text(
+                        'Cambiar Contraseña',
+                        style: whiteBoldText,
+                      ),
+                      trailing: Icon(
+                        Icons.keyboard_arrow_right,
+                        color: Colors.grey.shade400,
+                      ),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const CambiarPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    const Divider(
+                      color: Colors.black,
+                      height: 5,
+                    ),
+                  ],
+                ),
               ),
-              subtitle: Text(
-                elDispositivo ?? 'Ninguna',
-                style: greyText,
-              ),
-              trailing: Icon(
-                Icons.keyboard_arrow_right,
-                color: Colors.grey.shade400,
-              ),
-              onTap: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SeleccionPage2(),
-                  ),
-                );
-                _getUserInfo();
-              },
             ),
-            const Divider(
-              color: Colors.black,
-              height: 5,
-            ),
-            ListTile(
-              title: const Text(
-                'Cambiar Contraseña',
-                style: whiteBoldText,
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                'V2.0',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
               ),
-              trailing: Icon(
-                Icons.keyboard_arrow_right,
-                color: Colors.grey.shade400,
-              ),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const CambiarPage(),
-                  ),
-                );
-              },
-            ),
-            const Divider(
-              color: Colors.black,
-              height: 5,
             ),
           ],
         ),

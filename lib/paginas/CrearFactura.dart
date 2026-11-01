@@ -21,6 +21,8 @@ class CrearFacturaPage extends StatefulWidget {
 }
 
 class _CrearFacturaState extends State<CrearFacturaPage> {
+  static final RegExp _walletPattern = RegExp(r'^[a-zA-Z0-9]+$');
+
   final MoneyMaskedTextController controller = MoneyMaskedTextController(
     precision: 0,
     decimalSeparator: '',
@@ -31,9 +33,36 @@ class _CrearFacturaState extends State<CrearFacturaPage> {
   final TestPrint testPrint = TestPrint();
 
   bool _isLoading = false;
+  bool _showWalletErrors = false;
   Map<String, dynamic>? userData;
   String? pathImage;
   String _mySelection = 'COP';
+
+  String? _walletError(String value, String fieldName) {
+    final trimmedValue = value.trim();
+    if (trimmedValue.isEmpty) {
+      return 'Ingresa $fieldName del wallet';
+    }
+    if (value != trimmedValue || !_walletPattern.hasMatch(trimmedValue)) {
+      return 'Usa solo letras y numeros';
+    }
+    return null;
+  }
+
+  void _showSoftMessage(String message) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          backgroundColor: const Color.fromARGB(255, 45, 57, 78),
+        ),
+      );
+  }
 
   @override
   void initState() {
@@ -98,7 +127,8 @@ class _CrearFacturaState extends State<CrearFacturaPage> {
                         height: 1.0,
                         decoration: const BoxDecoration(
                           border: Border(
-                            bottom: BorderSide(color: Colors.transparent, width: 1.0),
+                            bottom: BorderSide(
+                                color: Colors.transparent, width: 1.0),
                           ),
                         ),
                       ),
@@ -142,17 +172,29 @@ class _CrearFacturaState extends State<CrearFacturaPage> {
                     child: Padding(
                       padding: const EdgeInsets.all(20.0),
                       child: TextField(
-                        maxLength: 4,
                         controller: primerosController,
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: '3 primeros dígitos',
-                          hintText: 'Ingresa los 3 primeros dígitos del wallet',
+                          labelText: 'Inicio wallet',
+                          hintText: 'Escribe el inicio del wallet',
                           icon: Icon(Icons.monetization_on),
                           isDense: true,
                           contentPadding: EdgeInsets.all(10),
+                        ).copyWith(
+                          errorText: _showWalletErrors
+                              ? _walletError(
+                                  primerosController.text, 'el inicio')
+                              : null,
                         ),
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        keyboardType: TextInputType.visiblePassword,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        textCapitalization: TextCapitalization.none,
+                        onChanged: (_) {
+                          if (_showWalletErrors) {
+                            setState(() {});
+                          }
+                        },
                       ),
                     ),
                   ),
@@ -160,17 +202,28 @@ class _CrearFacturaState extends State<CrearFacturaPage> {
                     child: Padding(
                       padding: const EdgeInsets.all(20.0),
                       child: TextField(
-                        maxLength: 4,
                         controller: ultimosController,
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: '3 últimos dígitos',
-                          hintText: 'Ingresa los 3 últimos dígitos del wallet',
+                          labelText: 'Fin wallet',
+                          hintText: 'Escribe el fin del wallet',
                           icon: Icon(Icons.monetization_on),
                           isDense: true,
                           contentPadding: EdgeInsets.all(10),
+                        ).copyWith(
+                          errorText: _showWalletErrors
+                              ? _walletError(ultimosController.text, 'el fin')
+                              : null,
                         ),
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        keyboardType: TextInputType.visiblePassword,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        textCapitalization: TextCapitalization.none,
+                        onChanged: (_) {
+                          if (_showWalletErrors) {
+                            setState(() {});
+                          }
+                        },
                       ),
                     ),
                   ),
@@ -223,14 +276,39 @@ class _CrearFacturaState extends State<CrearFacturaPage> {
   }
 
   Future<void> _crearFactura() async {
+    final walletInicioRaw = primerosController.text;
+    final walletFinRaw = ultimosController.text;
+    final walletInicio = walletInicioRaw.trim();
+    final walletFin = walletFinRaw.trim();
+    final walletInicioError = _walletError(walletInicioRaw, 'el inicio');
+    final walletFinError = _walletError(walletFinRaw, 'el fin');
+
+    if (walletInicioError != null || walletFinError != null) {
+      setState(() {
+        _showWalletErrors = true;
+      });
+      _showSoftMessage(
+        walletInicio.isEmpty || walletFin.isEmpty
+            ? 'Ingresa inicio y fin del wallet para continuar.'
+            : 'El wallet solo puede contener letras y numeros.',
+      );
+      return;
+    }
+
+    if (_showWalletErrors) {
+      setState(() {
+        _showWalletErrors = false;
+      });
+    }
+
     setState(() {
       _isLoading = true;
     });
 
     final data = {
       'valor': controller.numberValue.toInt().toString(),
-      'wallet_inicio': primerosController.text,
-      'wallet_fin': ultimosController.text,
+      'wallet_inicio': walletInicio,
+      'wallet_fin': walletFin,
       'cliente_id': widget.id,
       'currency': _mySelection,
     };
@@ -246,16 +324,12 @@ class _CrearFacturaState extends State<CrearFacturaPage> {
         if (facturaId != null && direccion != null && imagePath != null) {
           await testPrint.sample2(imagePath, direccion, facturaId);
         }
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-          controller.updateValue(0);
-          primerosController.clear();
-          ultimosController.clear();
-        }
+        if (!mounted) return;
+        Navigator.of(context).pop(true);
+        return;
       } else {
-        await _showDialog(body['mensaje']?.toString() ?? 'Error al crear la factura');
+        await _showDialog(
+            body['mensaje']?.toString() ?? 'Error al crear la factura');
       }
     } catch (error) {
       await _showDialog('No se pudo crear la factura: $error');

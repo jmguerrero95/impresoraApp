@@ -41,6 +41,7 @@ flutter:
     - assets/images/impresoralogo.png
     - assets/images/xeler_tarjetas.png
     - assets/images/192xeler.png
+    - assets/images/192blanco.png
 
   fonts:
     - family: Raleway

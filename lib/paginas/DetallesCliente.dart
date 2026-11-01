@@ -31,12 +31,14 @@ class _DetallesClienteState extends State<DetallesCliente> {
 
   final List<Facturas> _ultimos = [];
   String? pathImage;
+  String pathImage2 = '';
   Map<String, dynamic>? userData;
 
   @override
   void initState() {
     super.initState();
     initSavetoPath();
+    initSavetoPath2();
     initPlatformState();
     _getUserInfo();
     _loadFacturas();
@@ -44,7 +46,7 @@ class _DetallesClienteState extends State<DetallesCliente> {
 
   Future<void> _loadFacturas() async {
     try {
-      final response = await CallApi().getData('obtenerFacturasCliente/${widget.id}');
+      final response = await CallApi().getData('obtenerFacturasCliente2/${widget.id}');
       if (response.statusCode == 200) {
         final List<dynamic> notesJson = jsonDecode(response.body) as List<dynamic>;
         final facturas = notesJson
@@ -109,6 +111,19 @@ class _DetallesClienteState extends State<DetallesCliente> {
     }
   }
 
+  Future<void> initSavetoPath2() async {
+    const filename = '192blanco.png';
+    final bytes = await rootBundle.load('assets/images/192blanco.png');
+    final dir = (await getApplicationDocumentsDirectory()).path;
+    final fullPath = '$dir/$filename';
+    await writeToFile(bytes, fullPath);
+    if (mounted) {
+      setState(() {
+        pathImage2 = fullPath;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -139,8 +154,8 @@ class _DetallesClienteState extends State<DetallesCliente> {
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.green,
                     ),
-                    onPressed: () {
-                      Navigator.of(context).push(
+                    onPressed: () async {
+                      await Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => CrearFacturaBlancoPage(
                             id: widget.id,
@@ -148,6 +163,8 @@ class _DetallesClienteState extends State<DetallesCliente> {
                           ),
                         ),
                       );
+                      if (!mounted) return;
+                      await _loadFacturas();
                     },
                   ),
                   IconButton(
@@ -155,8 +172,8 @@ class _DetallesClienteState extends State<DetallesCliente> {
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.deepPurpleAccent,
                     ),
-                    onPressed: () {
-                      Navigator.of(context).push(
+                    onPressed: () async {
+                      await Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => CrearFacturaPage(
                             id: widget.id,
@@ -164,6 +181,8 @@ class _DetallesClienteState extends State<DetallesCliente> {
                           ),
                         ),
                       );
+                      if (!mounted) return;
+                      await _loadFacturas();
                     },
                   ),
                 ],
@@ -174,28 +193,32 @@ class _DetallesClienteState extends State<DetallesCliente> {
                 height: 690,
                 margin: const EdgeInsets.only(top: 15),
                 child: Column(
-                    children: <Widget>[
-                      const Row(
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.only(top: 0.0, left: 20),
-                            child: Text(
-                              'Últimas 5 Facturas',
-                              style: TextStyle(fontSize: 18.0),
-                            ),
+                  children: <Widget>[
+                    const Row(
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.only(top: 0.0, left: 20),
+                          child: Text(
+                            'Últimas 5 Facturas',
+                            style: TextStyle(fontSize: 18.0),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
                     Expanded(
                       child: _ultimos.isNotEmpty
                           ? ListView.builder(
                               itemBuilder: (context, index) {
                                 final factura = _ultimos[index];
+                                final bool esBlanco = factura.tipo == 'blanco';
+
                                 return Card(
                                   elevation: 8.0,
                                   child: Container(
-                                    decoration: const BoxDecoration(
-                                      color: Color.fromARGB(255, 36, 38, 80),
+                                    decoration: BoxDecoration(
+                                      color: esBlanco
+                                          ? Colors.green // FACTURA EN BLANCO
+                                          : const Color.fromARGB(255, 36, 38, 80),
                                     ),
                                     child: ListTile(
                                       contentPadding: const EdgeInsets.symmetric(
@@ -203,7 +226,7 @@ class _DetallesClienteState extends State<DetallesCliente> {
                                         vertical: 10.0,
                                       ),
                                       title: Text(
-                                        'Valor: COP ${formato.format(int.parse(factura.valor))}',
+                                        'Valor: ${factura.currency} ${formato.format(int.parse(factura.valor))}',
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
@@ -216,7 +239,9 @@ class _DetallesClienteState extends State<DetallesCliente> {
                                             child: Padding(
                                               padding: const EdgeInsets.only(left: 4.0),
                                               child: Text(
-                                                'Wallet destino: ${factura.primeros} / ${factura.ultimos}',
+                                                esBlanco
+                                                    ? 'Descripción: ${factura.descripcion ?? ''}'
+                                                    : 'Wallet destino: ${factura.primeros} / ${factura.ultimos}',
                                                 style: const TextStyle(color: Colors.white),
                                               ),
                                             ),
@@ -224,10 +249,23 @@ class _DetallesClienteState extends State<DetallesCliente> {
                                         ],
                                       ),
                                       onTap: () async {
-                                        final direccion = userData?['direccion']?.toString() ??
-                                            userData?['address']?.toString();
+                                        final direccion =
+                                            userData?['direccion']?.toString() ??
+                                                userData?['address']?.toString();
                                         final imagePath = pathImage;
-                                        if (direccion != null && imagePath != null) {
+                                        final imagePath2 = pathImage2;
+
+                                        if (direccion == null || imagePath == null) return;
+
+                                        if (factura.tipo == 'blanco') {
+                                          // FACTURA EN BLANCO → sample3
+                                          await testPrint.sample3(
+                                            imagePath2,
+                                            direccion,
+                                            factura.id.toString(),
+                                          );
+                                        } else {
+                                          // FACTURA NORMAL → sample2
                                           await testPrint.sample2(
                                             imagePath,
                                             direccion,
@@ -282,13 +320,10 @@ class ProfileHeader extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Row(
             children: [
-              // BOTÓN IZQUIERDO
               if (actions != null && actions!.isNotEmpty)
                 actions![0]
               else
                 const SizedBox(width: 48),
-
-              // TEXTO CENTRADO
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -309,8 +344,6 @@ class ProfileHeader extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // BOTÓN DERECHO
               if (actions != null && actions!.length > 1)
                 actions![1]
               else
@@ -321,5 +354,4 @@ class ProfileHeader extends StatelessWidget {
       ],
     );
   }
-
 }

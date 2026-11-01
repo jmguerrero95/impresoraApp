@@ -1,8 +1,72 @@
-# Flutter generated directories
+# Flutter / Dart: cachés y metadatos regenerables.
 .dart_tool/
-build/
-ios/Flutter/ephemeral/
+.pub-cache/
+.pub/
+.packages
 .flutter-plugins
 .flutter-plugins-dependencies
-.packages
-android/.idea/
+build/
+coverage/
+
+# Herramientas locales de Flutter (conservar .metadata si existe).
+/Flutter/ephemeral/
+/fvm/flutter_sdk/
+/fvm/versions/
+
+# Android: cachés y rutas de SDK propias de cada equipo.
+/android/.gradle/
+/android/.kotlin/
+/android/local.properties
+/android/captures/
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+
+# Firma privada de Android. Los ejemplos pueden versionarse.
+/android/key.properties
+*.jks
+*.keystore
+
+# iOS: dependencias, archivos generados y preferencias personales de Xcode.
+/ios/Pods/
+/ios/.symlinks/
+/ios/Flutter/ephemeral/
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/flutter_export_environment.sh
+/ios/Flutter/App.framework/
+/ios/Flutter/Flutter.framework/
+/ios/Flutter/Flutter.podspec
+/ios/Flutter/app.flx
+/ios/Flutter/app.zip
+/ios/Flutter/flutter_assets/
+/ios/Runner/GeneratedPluginRegistrant.*
+/ios/**/xcuserdata/
+/ios/**/DerivedData/
+*.p12
+*.pfx
+*.mobileprovision
+
+# Configuración personal de IDE. Conservar .vscode para configuración compartida.
+.idea/
+*.iml
+.vscode/*.local.json
+
+# Variables locales/secretos, si se incorporan en el futuro.
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+
+# Residuos del sistema/editor.
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# Mantener versionados pubspec.lock, packages/, assets/, fonts/ y test/.
+# Mantener gradlew, gradlew.bat y gradle-wrapper.jar/properties.
+# android/.gitignore también debe conservar el wrapper (ver versión adjunta).

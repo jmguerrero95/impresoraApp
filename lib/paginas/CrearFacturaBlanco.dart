@@ -49,8 +49,8 @@ class _CrearFacturaState extends State<CrearFacturaBlancoPage> {
   }
 
   Future<void> initSavetoPath() async {
-    const filename = '192xeler.png';
-    final bytes = await rootBundle.load('assets/images/192xeler.png');
+    const filename = '192blanco.png';
+    final bytes = await rootBundle.load('assets/images/192blanco.png');
     final dir = (await getApplicationDocumentsDirectory()).path;
     final fullPath = '$dir/$filename';
     await writeToFile(bytes, fullPath);
@@ -218,13 +218,9 @@ class _CrearFacturaState extends State<CrearFacturaBlancoPage> {
         if (facturaId != null && direccion != null && imagePath != null) {
           await testPrint.sample3(imagePath, direccion, facturaId);
         }
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-          controller.updateValue(0);
-          descripcionController.clear();
-        }
+        if (!mounted) return;
+        Navigator.of(context).pop(true);
+        return;
       } else {
         await _showDialog(body['mensaje']?.toString() ?? 'Error al crear la factura');
       }

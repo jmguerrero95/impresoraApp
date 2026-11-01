@@ -1,7 +1,20 @@
-gradle-wrapper.jar
-/.gradle
-/captures/
-/gradlew
-/gradlew.bat
+# Cachés, salidas y configuración local de Android.
+/.gradle/
+/.kotlin/
 /local.properties
-GeneratedPluginRegistrant.java
+/captures/
+/build/
+/app/build/
+/app/debug/
+/app/profile/
+/app/release/
+/key.properties
+
+# Registro de plugins generado por Flutter.
+/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+
+# Versionar el wrapper completo para conservar la versión de Gradle.
+!/gradlew
+!/gradlew.bat
+!/gradle/wrapper/gradle-wrapper.jar
+!/gradle/wrapper/gradle-wrapper.properties
